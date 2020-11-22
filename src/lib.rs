@@ -33,19 +33,24 @@ pub fn run(config: Config) -> Result<(), &'static str> {
     match config.command.as_str() {
         "add" => {
             add_new_task(config);
-        }
+        },
         _ => return Err("Invalid command"),
     }
 
     Ok(())
 }
 
-pub fn add_new_task(config: Config) {
+fn get_task_data() -> Tasks {
     let data = match fs::read_to_string("tasks.json") {
         Ok(s) => s,
         Err(_e) => String::from("{ \"daily\": [], \"weekly\": [], \"monthly\": [] }"),
     };
-    let mut json: Tasks = serde_json::from_str(data.as_str()).unwrap();
+
+    serde_json::from_str(data.as_str()).unwrap()
+}
+
+fn add_new_task(config: Config) {
+    let mut json = get_task_data();
 
     let recurrence = match config.recurrence.as_str() {
         "daily" => &mut json.daily,
