@@ -88,6 +88,11 @@ fn generate_id(tasks: &Vec<Task>) -> u16 {
     tasks.last().unwrap_or(&default_task).id + 1
 }
 
+fn update_json(new_json: &Tasks) {
+    let updated_json = serde_json::to_string(new_json).unwrap();
+    fs::write("tasks.json", updated_json).expect("Unable to write file");
+}
+
 fn add_new_task(config: Config) {
     let mut json = get_task_data();
     let recurrence = get_json_recurrence(config.recurrence.as_str(), &mut json);
@@ -97,14 +102,16 @@ fn add_new_task(config: Config) {
     let new_task = Task::new(id, name);
     recurrence.push(new_task);
 
-    let updated_json = serde_json::to_string(&json).unwrap();
-    fs::write("tasks.json", updated_json).expect("Unable to write file");
+    update_json(&json);
 }
 
 fn delete_task(config: Config) {
     let mut json = get_task_data();
     let recurrence = get_json_recurrence(config.recurrence.as_str(), &mut json);
-    
-    
-    //let rec
+   
+    let name = config.name;
+    let task_index = recurrence.iter().position(|x| *x.name == name).unwrap();
+    recurrence.remove(task_index);
+
+    update_json(&json);
 }
