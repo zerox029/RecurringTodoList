@@ -27,6 +27,15 @@ struct Task {
     name: String
 }
 
+impl Task {
+    pub fn new(id: u16, name:String) -> Task {
+        Task {
+            id,
+            name
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize)]
 struct Tasks {
     daily: Vec<Task>,
@@ -74,12 +83,19 @@ fn get_json_recurrence<'a>(string: &str, json: &'a mut Tasks) -> &'a mut Vec<Tas
     recurrence
 }
 
+fn generate_id(tasks: &Vec<Task>) -> u16 {
+    let default_task = Task::new(0, String::new());
+    tasks.last().unwrap_or(&default_task).id + 1
+}
+
 fn add_new_task(config: Config) {
     let mut json = get_task_data();
     let recurrence = get_json_recurrence(config.recurrence.as_str(), &mut json);
 
-
-    recurrence.push(config.name);
+    let id = generate_id(recurrence);
+    let name = config.name;
+    let new_task = Task::new(id, name);
+    recurrence.push(new_task);
 
     let updated_json = serde_json::to_string(&json).unwrap();
     fs::write("tasks.json", updated_json).expect("Unable to write file");
