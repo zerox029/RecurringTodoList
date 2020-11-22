@@ -21,18 +21,26 @@ impl Config {
         Ok(Config { command, recurrence, name })
     }
 }
+#[derive(Serialize, Deserialize)]
+struct Task {
+    id: u16,
+    name: String
+}
 
 #[derive(Serialize, Deserialize)]
 struct Tasks {
-    daily: Vec<String>,
-    weekly: Vec<String>,
-    monthly: Vec<String>
+    daily: Vec<Task>,
+    weekly: Vec<Task>,
+    monthly: Vec<Task>
 }
 
 pub fn run(config: Config) -> Result<(), &'static str> {
     match config.command.as_str() {
         "add" => {
             add_new_task(config);
+        },
+        "del" => {
+            delete_task(config);
         },
         _ => return Err("Invalid command"),
     }
@@ -49,10 +57,8 @@ fn get_task_data() -> Tasks {
     serde_json::from_str(data.as_str()).unwrap()
 }
 
-fn add_new_task(config: Config) {
-    let mut json = get_task_data();
-
-    let recurrence = match config.recurrence.as_str() {
+fn get_json_recurrence<'a>(string: &str, json: &'a mut Tasks) -> &'a mut Vec<Task> {
+    let recurrence = match string {
         "daily" => &mut json.daily,
         "day" => &mut json.daily,
         "d" => &mut json.daily,
@@ -65,8 +71,24 @@ fn add_new_task(config: Config) {
         _ => &mut json.daily
     };
 
+    recurrence
+}
+
+fn add_new_task(config: Config) {
+    let mut json = get_task_data();
+    let recurrence = get_json_recurrence(config.recurrence.as_str(), &mut json);
+
+
     recurrence.push(config.name);
 
     let updated_json = serde_json::to_string(&json).unwrap();
     fs::write("tasks.json", updated_json).expect("Unable to write file");
+}
+
+fn delete_task(config: Config) {
+    let mut json = get_task_data();
+    let recurrence = get_json_recurrence(config.recurrence.as_str(), &mut json);
+    
+    
+    //let rec
 }
